@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import GanttChart from './GanttChart';
 
 const ScheduleTab = ({ projectId }) => {
   const [activities, setActivities] = useState([]);
@@ -33,7 +34,6 @@ const ScheduleTab = ({ projectId }) => {
         setPackages(pkgsRes.data);
         setContractors(ctrsRes.data);
 
-        // Fetch dependencies for each activity
         const dependenciesObj = {};
         for (const activity of actsRes.data) {
           const depRes = await axios.get(
@@ -49,7 +49,6 @@ const ScheduleTab = ({ projectId }) => {
     fetchData();
   }, [projectId]);
 
-  // Automatski izračunavanje duration i end_date
   useEffect(() => {
     const { start_date, end_date, duration } = newActivity;
 
@@ -98,7 +97,7 @@ const ScheduleTab = ({ projectId }) => {
   const handleAddDependency = async () => {
     if (!newDependency.from_id || !newDependency.to_id || !newDependency.type) return;
     try {
-      const response = await axios.post(
+      await axios.post(
         `http://localhost:4000/api/activities/${newDependency.to_id}/dependencies`,
         {
           from_id: newDependency.from_id,
@@ -137,7 +136,6 @@ const ScheduleTab = ({ projectId }) => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Schedule – Aktivnosti i veze</h2>
 
-      {/* Aktivnost forma */}
       <form onSubmit={handleSubmit} className="space-y-2 mb-6">
         <h3 className="text-lg font-semibold">Dodaj novu aktivnost</h3>
         <input
@@ -218,7 +216,6 @@ const ScheduleTab = ({ projectId }) => {
         </button>
       </form>
 
-      {/* Dodavanje zavisnosti */}
       <div className="mb-6 space-y-2">
         <h3 className="text-lg font-semibold">Dodaj zavisnost između aktivnosti</h3>
         <div className="flex gap-4">
@@ -265,7 +262,6 @@ const ScheduleTab = ({ projectId }) => {
         </div>
       </div>
 
-      {/* Lista aktivnosti + zavisnosti */}
       <div>
         <h3 className="text-lg font-semibold mb-2">Lista aktivnosti</h3>
         {activities.length === 0 ? (
@@ -304,6 +300,11 @@ const ScheduleTab = ({ projectId }) => {
           </ul>
         )}
       </div>
+
+      <GanttChart
+        activities={activities}
+        dependencies={Object.values(dependenciesMap).flat()}
+      />
     </div>
   );
 };
