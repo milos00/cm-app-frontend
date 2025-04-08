@@ -5,6 +5,7 @@ const ScheduleTab = ({ projectId }) => {
   const [activities, setActivities] = useState([]);
   const [packages, setPackages] = useState([]);
   const [contractors, setContractors] = useState([]);
+  const [dependenciesMap, setDependenciesMap] = useState({});
   const [newActivity, setNewActivity] = useState({
     name: '',
     start_date: '',
@@ -12,6 +13,12 @@ const ScheduleTab = ({ projectId }) => {
     duration: '',
     package_id: '',
     contractor_id: ''
+  });
+
+  const [newDependency, setNewDependency] = useState({
+    from_id: '',
+    to_id: '',
+    type: 'FS'
   });
 
   useEffect(() => {
@@ -25,18 +32,27 @@ const ScheduleTab = ({ projectId }) => {
         setActivities(actsRes.data);
         setPackages(pkgsRes.data);
         setContractors(ctrsRes.data);
+
+        // Fetch dependencies for each activity
+        const dependenciesObj = {};
+        for (const activity of actsRes.data) {
+          const depRes = await axios.get(
+            `http://localhost:4000/api/activities/${activity.id}/dependencies`
+          );
+          dependenciesObj[activity.id] = depRes.data;
+        }
+        setDependenciesMap(dependenciesObj);
       } catch (error) {
-        console.error('Greška pri dohvatanju aktivnosti:', error);
+        console.error('Greška pri dohvatanju podataka:', error);
       }
     };
     fetchData();
   }, [projectId]);
 
-  // Automatsko računanje duration i end_date
+  // Automatski izračunavanje duration i end_date
   useEffect(() => {
     const { start_date, end_date, duration } = newActivity;
 
-    // Ako imamo start i end, računaj duration
     if (start_date && end_date && !duration) {
       const start = new Date(start_date);
       const end = new Date(end_date);
@@ -46,7 +62,6 @@ const ScheduleTab = ({ projectId }) => {
       }
     }
 
-    // Ako imamo start i duration, računaj end
     if (start_date && duration && !end_date) {
       const start = new Date(start_date);
       const end = new Date(start);
@@ -80,10 +95,49 @@ const ScheduleTab = ({ projectId }) => {
     }
   };
 
+  const handleAddDependency = async () => {
+    if (!newDependency.from_id || !newDependency.to_id || !newDependency.type) return;
+    try {
+      const response = await axios.post(
+        `http://localhost:4000/api/activities/${newDependency.to_id}/dependencies`,
+        {
+          from_id: newDependency.from_id,
+          type: newDependency.type
+        }
+      );
+      const updated = await axios.get(
+        `http://localhost:4000/api/activities/${newDependency.to_id}/dependencies`
+      );
+      setDependenciesMap((prev) => ({
+        ...prev,
+        [newDependency.to_id]: updated.data
+      }));
+      setNewDependency({ from_id: '', to_id: '', type: 'FS' });
+    } catch (error) {
+      console.error('Greška pri dodavanju veze:', error);
+    }
+  };
+
+  const handleDeleteDependency = async (toId, depId) => {
+    try {
+      await axios.delete(`http://localhost:4000/api/activities/${toId}/dependencies/${depId}`);
+      const updated = await axios.get(
+        `http://localhost:4000/api/activities/${toId}/dependencies`
+      );
+      setDependenciesMap((prev) => ({
+        ...prev,
+        [toId]: updated.data
+      }));
+    } catch (error) {
+      console.error('Greška pri brisanju veze:', error);
+    }
+  };
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Schedule – Aktivnosti</h2>
+      <h2 className="text-xl font-bold mb-4">Schedule – Aktivnosti i veze</h2>
 
+      {/* Aktivnost forma */}
       <form onSubmit={handleSubmit} className="space-y-2 mb-6">
         <h3 className="text-lg font-semibold">Dodaj novu aktivnost</h3>
         <input
@@ -164,6 +218,54 @@ const ScheduleTab = ({ projectId }) => {
         </button>
       </form>
 
+      {/* Dodavanje zavisnosti */}
+      <div className="mb-6 space-y-2">
+        <h3 className="text-lg font-semibold">Dodaj zavisnost između aktivnosti</h3>
+        <div className="flex gap-4">
+          <select
+            value={newDependency.from_id}
+            onChange={(e) => setNewDependency({ ...newDependency, from_id: e.target.value })}
+            className="border px-3 py-2 rounded w-full"
+          >
+            <option value="">-- From (prethodna) --</option>
+            {activities.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={newDependency.to_id}
+            onChange={(e) => setNewDependency({ ...newDependency, to_id: e.target.value })}
+            className="border px-3 py-2 rounded w-full"
+          >
+            <option value="">-- To (zavisna) --</option>
+            {activities.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={newDependency.type}
+            onChange={(e) => setNewDependency({ ...newDependency, type: e.target.value })}
+            className="border px-3 py-2 rounded w-full"
+          >
+            <option value="FS">FS</option>
+            <option value="SS">SS</option>
+            <option value="FF">FF</option>
+            <option value="SF">SF</option>
+          </select>
+          <button
+            onClick={handleAddDependency}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Dodaj
+          </button>
+        </div>
+      </div>
+
+      {/* Lista aktivnosti + zavisnosti */}
       <div>
         <h3 className="text-lg font-semibold mb-2">Lista aktivnosti</h3>
         {activities.length === 0 ? (
@@ -179,6 +281,24 @@ const ScheduleTab = ({ projectId }) => {
                 <div className="text-sm text-gray-500 italic">
                   Paket ID: {a.package_id} | Izvođač: {a.contractor_id || '—'}
                 </div>
+                {dependenciesMap[a.id]?.length > 0 && (
+                  <div className="text-sm mt-2">
+                    <strong>Zavisnosti:</strong>
+                    <ul className="list-disc ml-4">
+                      {dependenciesMap[a.id].map((dep) => (
+                        <li key={dep.id} className="flex justify-between items-center">
+                          {dep.type} ← Aktivnost #{dep.from_id}
+                          <button
+                            onClick={() => handleDeleteDependency(a.id, dep.id)}
+                            className="text-red-600 text-xs"
+                          >
+                            obriši
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
