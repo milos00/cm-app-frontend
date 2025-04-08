@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardTab from './DashboardTab';
+import ConstructionPackagesTab from './ConstructionPackagesTab';
 
 const ProjectTabs = ({ projectId }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -8,6 +9,8 @@ const ProjectTabs = ({ projectId }) => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardTab projectId={projectId} />;
+      case 'packages':
+        return <ConstructionPackagesTab projectId={projectId} />;
       default:
         return <div className="p-4">Modul nije implementiran.</div>;
     }
@@ -22,7 +25,12 @@ const ProjectTabs = ({ projectId }) => {
         >
           Dashboard
         </button>
-        {/* Ovde kasnije dodajemo druge tabove */}
+        <button
+          onClick={() => setActiveTab('packages')}
+          className={activeTab === 'packages' ? 'font-bold underline' : ''}
+        >
+          Construction Packages
+        </button>
       </div>
       <div>{renderTab()}</div>
     </div>
