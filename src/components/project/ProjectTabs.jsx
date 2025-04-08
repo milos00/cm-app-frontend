@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DashboardTab from './DashboardTab';
 import ConstructionPackagesTab from './ConstructionPackagesTab';
 import ContractorTab from './ContractorTab';
+import ScheduleTab from './ScheduleTab';
 
 const ProjectTabs = ({ projectId }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -14,6 +15,8 @@ const ProjectTabs = ({ projectId }) => {
         return <ConstructionPackagesTab projectId={projectId} />;
       case 'contractors':
         return <ContractorTab projectId={projectId} />;
+      case 'schedule':
+        return <ScheduleTab projectId={projectId} />;
       default:
         return <div className="p-4">Modul nije implementiran.</div>;
     }
@@ -39,6 +42,12 @@ const ProjectTabs = ({ projectId }) => {
           className={activeTab === 'contractors' ? 'font-bold underline' : ''}
         >
           Contractors
+        </button>
+        <button
+          onClick={() => setActiveTab('schedule')}
+          className={activeTab === 'schedule' ? 'font-bold underline' : ''}
+        >
+          Schedule
         </button>
       </div>
       <div>{renderTab()}</div>
