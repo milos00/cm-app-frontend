@@ -76,3 +76,42 @@ export const updatePackage = async (id, data) => {
   return await response.json();
 };
 
+// Izvodjaci
+
+export const updateContractor = async (id, data) => {
+  const res = await fetch(`http://localhost:4000/api/contractors/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Greška pri izmeni izvođača");
+  return await res.json();
+};
+
+export const deleteContractor = async (id) => {
+  const res = await fetch(`http://localhost:4000/api/contractors/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Greška pri brisanju izvođača");
+};
+
+export const addContractor = async (contractor) => {
+  const response = await fetch("http://localhost:4000/api/contractors", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(contractor),
+  });
+  if (!response.ok) throw new Error("Greška pri unosu izvođača");
+  return await response.json();
+};
+
+export const getContractors = async (projectId) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${projectId}/contractors`);
+  if (!response.ok) throw new Error("Greška pri dohvatanju izvođača");
+  return await response.json();
+};
+
+
+
+
+
