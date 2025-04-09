@@ -182,6 +182,42 @@ export const updateDependency = async (id, data) => {
   return await response.json();
 };
 
+// === DAILY LOGS ===
+
+export const getDailyLogsByActivity = async (activityId) => {
+  const res = await fetch(`http://localhost:4000/api/activities/${activityId}/daily-logs`);
+  if (!res.ok) throw new Error('Greška pri dohvatanju dnevnih logova');
+  return await res.json();
+};
+
+export const addDailyLog = async (activityId, logData) => {
+  const res = await fetch(`http://localhost:4000/api/activities/${activityId}/daily-logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logData),
+  });
+  if (!res.ok) throw new Error('Greška pri dodavanju dnevnog loga');
+  return await res.json();
+};
+
+export const updateDailyLog = async (logId, logData) => {
+  const res = await fetch(`http://localhost:4000/api/daily-logs/${logId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logData),
+  });
+  if (!res.ok) throw new Error('Greška pri izmeni dnevnog loga');
+  return await res.json();
+};
+
+export const deleteDailyLog = async (logId) => {
+  const res = await fetch(`http://localhost:4000/api/daily-logs/${logId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Greška pri brisanju dnevnog loga');
+};
+
+
 
 
 

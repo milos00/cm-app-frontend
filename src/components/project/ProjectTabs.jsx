@@ -3,6 +3,7 @@ import DashboardTab from './DashboardTab';
 import ConstructionPackagesTab from './ConstructionPackagesTab';
 import ContractorTab from './ContractorTab';
 import ScheduleTab from './ScheduleTab';
+import DailyLogsTab from './DailyLogsTab'; // 🆕 Dodato
 
 const ProjectTabs = ({ projectId }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,8 +18,10 @@ const ProjectTabs = ({ projectId }) => {
         return <ContractorTab projectId={projectId} />;
       case 'schedule':
         return <ScheduleTab projectId={projectId} />;
+      case 'dailyLogs':
+        return <DailyLogsTab projectId={projectId} />; // 🆕 Dodato
       default:
-        return <div className="p-4">Modul nije implementiran.</div>;
+        return null;
     }
   };
 
@@ -49,8 +52,15 @@ const ProjectTabs = ({ projectId }) => {
         >
           Schedule
         </button>
+        <button
+          onClick={() => setActiveTab('dailyLogs')}
+          className={activeTab === 'dailyLogs' ? 'font-bold underline' : ''}
+        >
+          Daily Logs
+        </button>
       </div>
-      <div>{renderTab()}</div>
+
+      <div className="p-4">{renderTab()}</div>
     </div>
   );
 };
