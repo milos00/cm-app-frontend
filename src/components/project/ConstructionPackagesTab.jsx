@@ -4,6 +4,7 @@ import {
   getPackages,
   postPackage,
   assignContractor,
+  updatePackage,
 } from "../../services/api";
 
 const ConstructionPackagesTab = ({ projectId }) => {
@@ -11,6 +12,8 @@ const ConstructionPackagesTab = ({ projectId }) => {
   const [contractors, setContractors] = useState([]);
   const [newPackage, setNewPackage] = useState({ name: "", scope: "" });
   const [selectedContractors, setSelectedContractors] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({ name: "", scope: "" });
 
   useEffect(() => {
     fetchPackages();
@@ -75,6 +78,26 @@ const ConstructionPackagesTab = ({ projectId }) => {
     }
   };
 
+  const startEdit = (pkg) => {
+    setEditingId(pkg.id);
+    setEditData({ name: pkg.name, scope: pkg.scope });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditData({ name: "", scope: "" });
+  };
+
+  const saveEdit = async (pkgId) => {
+    try {
+      await updatePackage(pkgId, editData);
+      setEditingId(null);
+      fetchPackages();
+    } catch (err) {
+      console.error("Greška pri izmeni paketa:", err);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <h3 className="text-lg font-semibold">Dodaj novi paket</h3>
@@ -115,48 +138,99 @@ const ConstructionPackagesTab = ({ projectId }) => {
         <ul className="space-y-4">
           {packages.map((pkg) => (
             <li key={pkg.id} className="border p-4 rounded shadow bg-white">
-              <div className="font-semibold">{pkg.name}</div>
-              <div className="text-sm text-gray-600 mb-2">{pkg.scope}</div>
-              <div className="flex items-center gap-4">
-                <select
-                  value={selectedContractors[pkg.id] || ""}
-                  onChange={(e) =>
-                    setSelectedContractors((prev) => ({
-                      ...prev,
-                      [pkg.id]: e.target.value,
-                    }))
-                  }
-                  className="border px-2 py-1 rounded"
-                >
-                  <option value="">-- Izaberi izvođača --</option>
-                  <option value="null">-- Ukloni izvođača --</option>
-                  {contractors.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => handleAssignContractor(pkg.id)}
-                  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                >
-                  Dodeli izvođača
-                </button>
-                <button
-                  onClick={() => handleDeletePackage(pkg.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                >
-                  Obriši paket
-                </button>
-              </div>
-              {pkg.contractor_id && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Izvođač:{" "}
-                  {
-                    contractors.find((c) => c.id === pkg.contractor_id)
-                      ?.name || "Nepoznat"
-                  }
-                </p>
+              {editingId === pkg.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) =>
+                      setEditData({ ...editData, name: e.target.value })
+                    }
+                    className="w-full border px-2 py-1 rounded mb-2"
+                    placeholder="Naziv"
+                  />
+                  <textarea
+                    value={editData.scope}
+                    onChange={(e) =>
+                      setEditData({ ...editData, scope: e.target.value })
+                    }
+                    className="w-full border px-2 py-1 rounded mb-2"
+                    placeholder="Opis"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveEdit(pkg.id)}
+                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+                    >
+                      Sačuvaj
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
+                    >
+                      Otkaži
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-semibold">{pkg.name}</div>
+                  <div className="text-sm text-gray-600 mb-2">{pkg.scope}</div>
+
+                  {/* GRUPA ZA IZVOĐAČA */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <select
+                      value={selectedContractors[pkg.id] || ""}
+                      onChange={(e) =>
+                        setSelectedContractors((prev) => ({
+                          ...prev,
+                          [pkg.id]: e.target.value,
+                        }))
+                      }
+                      className="border px-2 py-1 rounded"
+                    >
+                      <option value="">-- Izaberi izvođača --</option>
+                      <option value="null">-- Ukloni izvođača --</option>
+                      {contractors.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleAssignContractor(pkg.id)}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                    >
+                      Dodeli izvođača
+                    </button>
+                  </div>
+
+                  {/* GRUPA ZA UPRAVLJANJE PAKETOM */}
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => startEdit(pkg)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                    >
+                      Izmeni paket
+                    </button>
+                    <button
+                      onClick={() => handleDeletePackage(pkg.id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                    >
+                      Obriši paket
+                    </button>
+                  </div>
+
+                  {pkg.contractor_id && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Izvođač:{" "}
+                      {
+                        contractors.find((c) => c.id === pkg.contractor_id)
+                          ?.name || "Nepoznat"
+                      }
+                    </p>
+                  )}
+                </>
               )}
             </li>
           ))}

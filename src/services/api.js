@@ -65,3 +65,14 @@ export const assignContractor = async (packageId, contractorId) => {
   });
   if (!response.ok) throw new Error("Greška pri dodeli izvođača");
 };
+
+export const updatePackage = async (id, data) => {
+  const response = await fetch(`http://localhost:4000/api/packages/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Greška pri izmeni paketa");
+  return await response.json();
+};
+
