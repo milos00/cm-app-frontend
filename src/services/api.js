@@ -111,6 +111,81 @@ export const getContractors = async (projectId) => {
   return await response.json();
 };
 
+// Aktivnosti
+
+export const updateActivity = async (id, data) => {
+  const response = await fetch(`http://localhost:4000/api/activities/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Greška pri izmeni aktivnosti");
+  return await response.json();
+};
+
+export const deleteActivity = async (id) => {
+  const response = await fetch(`http://localhost:4000/api/activities/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Greška pri brisanju aktivnosti");
+};
+
+export const getActivities = async (projectId) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${projectId}/activities`);
+  if (!response.ok) throw new Error("Greška pri dohvatanju aktivnosti");
+  return await response.json();
+};
+
+export const addActivity = async (activity) => {
+  const response = await fetch("http://localhost:4000/api/activities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(activity),
+  });
+  if (!response.ok) throw new Error("Greška pri dodavanju aktivnosti");
+  return await response.json();
+};
+
+
+// dependencies 
+
+export const getDependencies = async (projectId) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${projectId}/dependencies`);
+  if (!response.ok) throw new Error("Greška pri dohvatanju zavisnosti");
+  return await response.json();
+};
+
+export const addDependency = async (dependency) => {
+  const response = await fetch("http://localhost:4000/api/dependencies", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dependency),
+  });
+  if (!response.ok) throw new Error("Greška pri dodavanju zavisnosti");
+  return await response.json();
+};
+
+export const deleteDependency = async (id) => {
+  const response = await fetch(`http://localhost:4000/api/dependencies/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Greška pri brisanju zavisnosti");
+};
+
+export const updateDependency = async (id, data) => {
+  const response = await fetch(`http://localhost:4000/api/dependencies/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Greška pri izmeni zavisnosti");
+  return await response.json();
+};
+
+
+
+
+
 
 
 
