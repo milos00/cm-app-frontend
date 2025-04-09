@@ -22,7 +22,6 @@ const DashboardTab = ({ projectId }) => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-2">{project.name}</h2>
       <p className="text-sm text-gray-600 mb-2">{project.location}</p>
       <p className="mb-2">{project.description}</p>
       <div className="text-sm text-gray-500">

@@ -1,40 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import { getProjects } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getProjects, addProject, deleteProject } from "../services/api";
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
+  const [newProject, setNewProject] = useState({
+    name: "",
+    location: "",
+    description: "",
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        setProjects(data);
-      } catch (error) {
-        console.error('Greška pri dohvatanju projekata:', error);
-      }
-    };
-
     fetchProjects();
   }, []);
 
-  const handleClick = (id) => {
-    navigate(`/projects/${id}`);
+  const fetchProjects = async () => {
+    try {
+      const data = await getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error("Greška pri dohvatanju projekata: ", error);
+    }
+  };
+
+  const handleAddProject = async (e) => {
+    e.preventDefault();
+    try {
+      await addProject(newProject);
+      setNewProject({ name: "", location: "", description: "" });
+      fetchProjects();
+    } catch (error) {
+      console.error("Greška pri dodavanju projekta: ", error);
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (window.confirm("Da li si siguran da želiš da obrišeš ovaj projekat?")) {
+      try {
+        await deleteProject(id);
+        fetchProjects();
+      } catch (error) {
+        console.error("Greška pri brisanju projekta: ", error);
+      }
+    }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Svi Projekti</h1>
-      <ul className="space-y-3">
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Svi projekti</h2>
+
+      <form onSubmit={handleAddProject} className="mb-6 space-y-2 bg-gray-50 p-4 rounded shadow">
+        <h3 className="text-lg font-semibold">Dodaj novi projekat</h3>
+        <input
+          type="text"
+          placeholder="Naziv"
+          value={newProject.name}
+          onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Lokacija"
+          value={newProject.location}
+          onChange={(e) => setNewProject({ ...newProject, location: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="Opis"
+          value={newProject.description}
+          onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Dodaj projekat
+        </button>
+      </form>
+
+      <ul className="space-y-4">
         {projects.map((project) => (
           <li
             key={project.id}
-            className="p-4 border rounded cursor-pointer hover:bg-gray-100"
-            onClick={() => handleClick(project.id)}
+            className="border p-4 rounded flex justify-between items-center bg-white shadow"
           >
-            <div className="font-semibold">{project.name}</div>
-            <div className="text-sm text-gray-600">{project.location}</div>
+            <div>
+              <div className="text-lg font-semibold">{project.name}</div>
+              <div className="text-sm text-gray-600">{project.location}</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/projects/${project.id}`)}
+                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+              >
+                Detalji
+              </button>
+              <button
+                onClick={() => handleDeleteProject(project.id)}
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+              >
+                Obriši
+              </button>
+            </div>
           </li>
         ))}
       </ul>
