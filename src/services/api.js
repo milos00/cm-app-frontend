@@ -1,12 +1,8 @@
-import axios from 'axios';
-
-const API = axios.create({
-  baseURL: 'http://localhost:4000/api',
-});
-
+// Projekti
 export const getProjects = async () => {
-  const response = await API.get('/projects');
-  return response.data;
+  const response = await fetch("http://localhost:4000/api/projects");
+  if (!response.ok) throw new Error("Greška pri dohvatanju projekata");
+  return await response.json();
 };
 
 export const addProject = async (project) => {
@@ -26,3 +22,35 @@ export const deleteProject = async (id) => {
   if (!response.ok) throw new Error("Greška pri brisanju projekta");
 };
 
+// Paketi
+export const getPackages = async (projectId) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${projectId}/packages`);
+  if (!response.ok) throw new Error("Greška pri dohvatanju paketa");
+  return await response.json();
+};
+
+export const postPackage = async (projectId, pkg) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${projectId}/packages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(pkg),
+  });
+  if (!response.ok) throw new Error("Greška pri unosu paketa");
+  return await response.json();
+};
+
+export const deletePackage = async (id) => {
+  const response = await fetch(`http://localhost:4000/api/packages/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Greška pri brisanju paketa");
+};
+
+export const assignContractor = async (packageId, contractorId) => {
+  const response = await fetch(`http://localhost:4000/api/packages/${packageId}/assign-contractor`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contractor_id: contractorId }),
+  });
+  if (!response.ok) throw new Error("Greška pri dodeli izvođača");
+};
