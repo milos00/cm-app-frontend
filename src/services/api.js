@@ -22,6 +22,17 @@ export const deleteProject = async (id) => {
   if (!response.ok) throw new Error("Greška pri brisanju projekta");
 };
 
+export const updateProject = async (id, data) => {
+  const response = await fetch(`http://localhost:4000/api/projects/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Greška pri izmeni projekta");
+  return await response.json();
+};
+
+
 // Paketi
 export const getPackages = async (projectId) => {
   const response = await fetch(`http://localhost:4000/api/projects/${projectId}/packages`);
