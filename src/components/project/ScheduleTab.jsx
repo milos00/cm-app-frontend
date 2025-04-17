@@ -124,26 +124,6 @@ const ScheduleTab = ({ projectId }) => {
 
       <GanttChart activities={activities} dependencies={dependencies} onActivityDoubleClick={(activity) => setSelectedActivity(activity)} />
 
-      <div className="bg-white shadow rounded-lg p-4 border mt-6 space-y-3">
-        <h3 className="text-lg font-semibold text-gray-800">Dodaj zavisnost</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          <select value={newDependency.from_id} onChange={(e) => setNewDependency({ ...newDependency, from_id: e.target.value })} className="border px-3 py-2 rounded w-full">
-            <option value="">Od aktivnosti</option>
-            {activities.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
-          </select>
-          <select value={newDependency.to_id} onChange={(e) => setNewDependency({ ...newDependency, to_id: e.target.value })} className="border px-3 py-2 rounded w-full">
-            <option value="">Ka aktivnosti</option>
-            {activities.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
-          </select>
-          <select value={newDependency.type} onChange={(e) => setNewDependency({ ...newDependency, type: e.target.value })} className="border px-3 py-2 rounded w-full">
-            <option value="FS">Finish → Start</option>
-            <option value="SS">Start → Start</option>
-            <option value="FF">Finish → Finish</option>
-          </select>
-        </div>
-        <button onClick={async () => { await addDependency({ ...newDependency, project_id: projectId }); setNewDependency({ from_id: '', to_id: '', type: 'FS' }); await fetchAll(); }} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Dodaj zavisnost</button>
-      </div>
-
       <EditActivityModal
   isOpen={!!selectedActivity}
   onClose={() => setSelectedActivity(null)}

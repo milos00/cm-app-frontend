@@ -1,7 +1,7 @@
 // src/components/project/EditActivityModal.jsx
 
 import React, { useState, useEffect } from 'react';
-import { updateActivity, addDependency, deleteDependency } from '../../services/api';
+import { updateActivity, addDependency, deleteDependency, deleteActivity, updateDependency } from '../../services/api';
 
 const EditActivityModal = ({
   isOpen,
@@ -14,7 +14,8 @@ const EditActivityModal = ({
   onSave,
 }) => {
   const [form, setForm] = useState({});
-  const [newDep, setNewDep] = useState({ from_id: '', type: 'FS' });
+  const [newDep, setNewDep] = useState({ from_id: '', type: 'FS', lag: 0 });
+  const [editableDeps, setEditableDeps] = useState([]);
 
   useEffect(() => {
     if (activity) {
@@ -26,9 +27,14 @@ const EditActivityModal = ({
         contractor_id: activity.contractor_id || '',
         package_id: activity.package_id || '',
       });
-      setNewDep({ from_id: '', type: 'FS' });
+      setNewDep({ from_id: '', type: 'FS', lag: 0 });
     }
   }, [activity]);
+
+  useEffect(() => {
+    const filtered = dependencies?.filter((d) => Number(d.to_id) === Number(activity?.id)) || [];
+    setEditableDeps(filtered.map((d) => ({ ...d })));
+  }, [dependencies, activity]);
 
   const calculateDuration = (start, end) => {
     const s = new Date(start);
@@ -75,6 +81,18 @@ const EditActivityModal = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Da li sigurno želiš da obrišeš ovu aktivnost?')) return;
+    try {
+      await deleteActivity(activity.id);
+      onSave();
+      onClose();
+    } catch (err) {
+      console.error('Greška pri brisanju aktivnosti:', err);
+      alert('Greška pri brisanju aktivnosti');
+    }
+  };
+
   const handleAddDependency = async () => {
     if (!newDep.from_id || newDep.from_id === activity.id) return;
     try {
@@ -83,9 +101,10 @@ const EditActivityModal = ({
         from_id: newDep.from_id,
         to_id: activity.id,
         type: newDep.type,
+        lag: Number(newDep.lag),
       });
       onSave();
-      setNewDep({ from_id: '', type: 'FS' });
+      setNewDep({ from_id: '', type: 'FS', lag: 0 });
     } catch (err) {
       console.error('Greška pri dodavanju zavisnosti:', err);
     }
@@ -100,9 +119,23 @@ const EditActivityModal = ({
     }
   };
 
+  const handleUpdateDependency = async (dep) => {
+    try {
+      await updateDependency(dep.id, { type: dep.type, lag: Number(dep.lag) });
+      onSave();
+    } catch (err) {
+      console.error('Greška pri izmeni zavisnosti:', err);
+    }
+  };
+
+  const handleEditChange = (id, field, value) => {
+    setEditableDeps((prev) =>
+      prev.map((dep) => (dep.id === id ? { ...dep, [field]: value } : dep))
+    );
+  };
+
   if (!isOpen || !activity) return null;
 
-  const filteredDeps = dependencies?.filter((d) => Number(d.to_id) === Number(activity.id)) || [];
   const availableFroms = activities.filter((a) => a.id !== activity.id);
 
   return (
@@ -128,14 +161,30 @@ const EditActivityModal = ({
         {/* 📌 Prikaz i upravljanje zavisnostima */}
         <div>
           <h3 className="font-semibold text-gray-800 mt-4">Zavisnosti</h3>
-          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mt-2">
-            {filteredDeps.length > 0 ? (
-              filteredDeps.map((dep) => {
+          <ul className="text-sm text-gray-700 space-y-2 mt-2">
+            {editableDeps.length > 0 ? (
+              editableDeps.map((dep) => {
                 const fromActivity = activities.find((a) => a.id === dep.from_id);
                 return (
-                  <li key={dep.id} className="flex justify-between items-center">
-                    <span>Zavisi od: {fromActivity?.name || 'Nepoznata'} ({dep.type})</span>
-                    <button onClick={() => handleDeleteDependency(dep.id)} className="text-red-600 text-xs hover:underline ml-2">Obriši</button>
+                  <li key={dep.id} className="flex items-center gap-2">
+                    <span className="flex-1">{fromActivity?.name || 'Nepoznata'}</span>
+                    <select
+                      value={dep.type}
+                      onChange={(e) => handleEditChange(dep.id, 'type', e.target.value)}
+                      className="border px-2 py-1 rounded"
+                    >
+                      <option value="FS">FS</option>
+                      <option value="SS">SS</option>
+                      <option value="FF">FF</option>
+                    </select>
+                    <input
+                      type="number"
+                      value={dep.lag}
+                      onChange={(e) => handleEditChange(dep.id, 'lag', e.target.value)}
+                      className="border px-2 py-1 w-16 rounded"
+                    />
+                    <button onClick={() => handleUpdateDependency(dep)} className="text-blue-600 text-xs hover:underline">Sačuvaj</button>
+                    <button onClick={() => handleDeleteDependency(dep.id)} className="text-red-600 text-xs hover:underline">Obriši</button>
                   </li>
                 );
               })
@@ -145,7 +194,7 @@ const EditActivityModal = ({
           </ul>
 
           {/* 📥 Dodavanje zavisnosti */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
             <select value={newDep.from_id} onChange={(e) => setNewDep({ ...newDep, from_id: e.target.value })} className="border px-3 py-2 rounded">
               <option value="">Zavisi od...</option>
               {availableFroms.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
@@ -155,15 +204,27 @@ const EditActivityModal = ({
               <option value="SS">Start → Start</option>
               <option value="FF">Finish → Finish</option>
             </select>
+            <input
+              type="number"
+              value={newDep.lag}
+              onChange={(e) => setNewDep({ ...newDep, lag: e.target.value })}
+              placeholder="Lag (dani)"
+              className="border px-3 py-2 rounded"
+            />
             <button onClick={handleAddDependency} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Dodaj zavisnost
             </button>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sačuvaj</button>
-          <button onClick={onClose} className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Otkaži</button>
+        <div className="flex justify-between items-center pt-4">
+          <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+            Obriši aktivnost
+          </button>
+          <div className="flex gap-3">
+            <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sačuvaj</button>
+            <button onClick={onClose} className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Otkaži</button>
+          </div>
         </div>
       </div>
     </div>
