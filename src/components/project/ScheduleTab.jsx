@@ -144,7 +144,17 @@ const ScheduleTab = ({ projectId }) => {
         <button onClick={async () => { await addDependency({ ...newDependency, project_id: projectId }); setNewDependency({ from_id: '', to_id: '', type: 'FS' }); await fetchAll(); }} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Dodaj zavisnost</button>
       </div>
 
-      <EditActivityModal isOpen={!!selectedActivity} onClose={() => setSelectedActivity(null)} activity={selectedActivity} contractors={contractors} packages={packages} onSave={fetchAll} />
+      <EditActivityModal
+  isOpen={!!selectedActivity}
+  onClose={() => setSelectedActivity(null)}
+  activity={selectedActivity}
+  contractors={contractors}
+  packages={packages}
+  dependencies={dependencies}
+  activities={activities}
+  onSave={fetchAll}
+/>
+
     </div>
   );
 };

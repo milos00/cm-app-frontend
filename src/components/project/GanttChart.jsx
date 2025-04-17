@@ -11,6 +11,8 @@ const GanttChart = ({ activities, dependencies, onActivityDoubleClick }) => {
     if (!activities.length) return;
 
     const mappedTasks = activities
+      .slice() // kopiramo niz
+      .sort((a, b) => a.id - b.id) // sortiramo po redosledu unosa (niži id -> ranije)
       .filter((a) => {
         const valid =
           a.start_date &&
@@ -34,7 +36,7 @@ const GanttChart = ({ activities, dependencies, onActivityDoubleClick }) => {
           type: 'task',
           progress: a.progress || 0,
           isDisabled: false,
-          activityData: a, // čuvamo punu aktivnost za kasnije
+          activityData: a, // čuvamo punu aktivnost za kasnije (modal)
           styles: {
             backgroundColor: '#4f46e5',
             progressColor: '#22c55e',
