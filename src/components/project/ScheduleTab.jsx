@@ -103,7 +103,9 @@ const ScheduleTab = ({ projectId }) => {
   return (
     <div className="p-4 space-y-8">
       <div className="bg-white border p-4 rounded shadow space-y-3">
-        <h2 className="text-lg font-bold">Dodaj novu aktivnost</h2>
+        <h2 className="text-2xl font-bold text-red-600 underline tracking-wide">
+  ✅ Tailwind radi! (Dodaj novu aktivnost)
+</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input type="text" placeholder="Naziv" value={newActivity.name} onChange={(e) => handleNewChange('name', e.target.value)} className="border px-3 py-2 rounded" />
           <input type="date" value={newActivity.start_date} onChange={(e) => handleNewChange('start_date', e.target.value)} className="border px-3 py-2 rounded" />
