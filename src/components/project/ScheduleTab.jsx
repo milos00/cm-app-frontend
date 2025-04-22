@@ -28,11 +28,6 @@ const ScheduleTab = ({ projectId }) => {
     contractor_id: '',
     package_id: '',
   });
-  const [newDependency, setNewDependency] = useState({
-    from_id: '',
-    to_id: '',
-    type: 'FS',
-  });
 
   useEffect(() => {
     fetchAll();
@@ -79,13 +74,22 @@ const ScheduleTab = ({ projectId }) => {
   };
 
   const handleAddActivity = async () => {
+    const today = new Date();
+    const defaultStart = today.toISOString().slice(0, 10);
+    const defaultDuration = 3;
+    const defaultEnd = calculateEndDate(defaultStart, defaultDuration);
+
+    const cleaned = {
+      name: newActivity.name || 'Nova aktivnost',
+      start_date: newActivity.start_date || defaultStart,
+      end_date: newActivity.end_date || defaultEnd,
+      duration: newActivity.duration || defaultDuration,
+      contractor_id: newActivity.contractor_id || null,
+      package_id: newActivity.package_id || null,
+      project_id: projectId,
+    };
+
     try {
-      const cleaned = {
-        ...newActivity,
-        start_date: newActivity.start_date?.slice(0, 10),
-        end_date: newActivity.end_date?.slice(0, 10),
-        project_id: projectId,
-      };
       await addActivity(cleaned);
       setNewActivity({
         name: '', start_date: '', end_date: '', duration: '', contractor_id: '', package_id: '',
@@ -122,19 +126,22 @@ const ScheduleTab = ({ projectId }) => {
         <button onClick={async () => { await manualSchedule(projectId); await fetchAll(); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Manually Schedule</button>
       </div>
 
-      <GanttChart activities={activities} dependencies={dependencies} onActivityDoubleClick={(activity) => setSelectedActivity(activity)} />
+      <GanttChart
+        activities={activities}
+        dependencies={dependencies}
+        onActivityDoubleClick={(activity) => setSelectedActivity(activity)}
+      />
 
       <EditActivityModal
-  isOpen={!!selectedActivity}
-  onClose={() => setSelectedActivity(null)}
-  activity={selectedActivity}
-  contractors={contractors}
-  packages={packages}
-  dependencies={dependencies}
-  activities={activities}
-  onSave={fetchAll}
-/>
-
+        isOpen={!!selectedActivity}
+        onClose={() => setSelectedActivity(null)}
+        activity={selectedActivity}
+        contractors={contractors}
+        packages={packages}
+        dependencies={dependencies}
+        activities={activities}
+        onSave={fetchAll}
+      />
     </div>
   );
 };

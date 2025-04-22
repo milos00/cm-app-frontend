@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "axios": "^1.8.4",
+    "date-fns": "^4.1.0",
     "frappe-gantt": "^1.0.3",
     "gantt-task-react": "^0.3.9",
     "react": "^19.0.0",

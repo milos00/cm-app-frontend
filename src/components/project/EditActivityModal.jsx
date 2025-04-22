@@ -1,4 +1,4 @@
-// src/components/project/EditActivityModal.jsx
+// src/components/project/EditActivityModal.jsx (slide-in panel verzija)
 
 import React, { useState, useEffect } from 'react';
 import { updateActivity, addDependency, deleteDependency, deleteActivity, updateDependency } from '../../services/api';
@@ -32,8 +32,8 @@ const EditActivityModal = ({
   }, [activity]);
 
   useEffect(() => {
-    const filtered = dependencies?.filter((d) => Number(d.to_id) === Number(activity?.id)) || [];
-    setEditableDeps(filtered.map((d) => ({ ...d })));
+    const preds = dependencies?.filter((d) => Number(d.to_id) === Number(activity?.id)) || [];
+    setEditableDeps(preds.map((d) => ({ ...d })));
   }, [dependencies, activity]);
 
   const calculateDuration = (start, end) => {
@@ -139,29 +139,44 @@ const EditActivityModal = ({
   const availableFroms = activities.filter((a) => a.id !== activity.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl space-y-6">
+    <div className="fixed inset-0 z-50">
+      {/* backdrop */}
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
+      {/* slide-in panel */}
+      <div className="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl overflow-y-auto p-6 space-y-6">
         <h2 className="text-xl font-semibold">Izmeni aktivnost</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input type="text" value={form.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Naziv" className="border px-3 py-2 rounded" />
-          <input type="date" value={form.start_date} onChange={(e) => handleChange('start_date', e.target.value)} className="border px-3 py-2 rounded" />
-          <input type="date" value={form.end_date} onChange={(e) => handleChange('end_date', e.target.value)} className="border px-3 py-2 rounded" />
-          <input type="number" value={form.duration} onChange={(e) => handleChange('duration', e.target.value)} placeholder="Trajanje" className="border px-3 py-2 rounded" />
-          <select value={form.contractor_id} onChange={(e) => handleChange('contractor_id', e.target.value)} className="border px-3 py-2 rounded">
-            <option value="">Izvođač</option>
-            {contractors.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
-          </select>
-          <select value={form.package_id} onChange={(e) => handleChange('package_id', e.target.value)} className="border px-3 py-2 rounded">
-            <option value="">Paket</option>
-            {packages.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
-          </select>
+        {/* Osnovne informacije */}
+        <div className="space-y-3 border-t pt-4">
+          <h3 className="text-md font-medium text-gray-800">📋 Osnovne informacije</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" value={form.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Naziv aktivnosti" className="border px-3 py-2 rounded w-full" />
+            <select value={form.package_id} onChange={(e) => handleChange('package_id', e.target.value)} className="border px-3 py-2 rounded w-full">
+              <option value="">Paket</option>
+              {packages.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
+            </select>
+            <select value={form.contractor_id} onChange={(e) => handleChange('contractor_id', e.target.value)} className="border px-3 py-2 rounded w-full">
+              <option value="">Izvođač</option>
+              {contractors.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+            </select>
+          </div>
         </div>
 
-        {/* 📌 Prikaz i upravljanje zavisnostima */}
-        <div>
-          <h3 className="font-semibold text-gray-800 mt-4">Zavisnosti</h3>
-          <ul className="text-sm text-gray-700 space-y-2 mt-2">
+        {/* Vremenski raspored */}
+        <div className="space-y-3 border-t pt-4">
+          <h3 className="text-md font-medium text-gray-800">🕒 Vremenski raspored</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="date" value={form.start_date} onChange={(e) => handleChange('start_date', e.target.value)} className="border px-3 py-2 rounded w-full" />
+            <input type="date" value={form.end_date} onChange={(e) => handleChange('end_date', e.target.value)} className="border px-3 py-2 rounded w-full" />
+            <input type="number" value={form.duration} onChange={(e) => handleChange('duration', e.target.value)} placeholder="Trajanje (dana)" className="border px-3 py-2 rounded w-full" />
+          </div>
+        </div>
+
+        {/* Zavisnosti */}
+        <div className="space-y-3 border-t pt-4">
+          <h3 className="text-md font-medium text-gray-800">🔗 Zavisi od</h3>
+          <ul className="text-sm text-gray-700 space-y-2">
             {editableDeps.length > 0 ? (
               editableDeps.map((dep) => {
                 const fromActivity = activities.find((a) => a.id === dep.from_id);
@@ -193,8 +208,8 @@ const EditActivityModal = ({
             )}
           </ul>
 
-          {/* 📥 Dodavanje zavisnosti */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+          {/* Dodavanje zavisnosti */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-2">
             <select value={newDep.from_id} onChange={(e) => setNewDep({ ...newDep, from_id: e.target.value })} className="border px-3 py-2 rounded">
               <option value="">Zavisi od...</option>
               {availableFroms.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
@@ -212,12 +227,12 @@ const EditActivityModal = ({
               className="border px-3 py-2 rounded"
             />
             <button onClick={handleAddDependency} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Dodaj zavisnost
+              Dodaj
             </button>
           </div>
         </div>
 
-        <div className="flex justify-between items-center pt-4">
+        <div className="flex justify-between items-center pt-4 border-t">
           <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
             Obriši aktivnost
           </button>
